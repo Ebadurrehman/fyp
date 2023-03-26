@@ -138,15 +138,41 @@ router.post('/signin', async (req, res) => {
 });
 
 //Signout API
-router.post('/signout', async (req, res) => {
-  try {
-    // Clear the token from the client-side by removing the token cookie
-    res.clearCookie('token');
+// router.post('/signout', async (req, res) => {
+//   try {
+//     // Clear the token from the client-side by removing the token cookie
+//     res.clearCookie('token');
     
-    res.status(200).json({ message: 'Sign out successful' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+//     res.status(200).json({ message: 'Sign out successful' });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+//Sign Out API
+const auth = (req, res, next) => {
+  const header = req.header('Authorization');
+  if (!header) {
+    return res.status(401).json({ error: 'Not authorized to access this resource' });
+  }
+  const token = header.replace('Bearer ', '');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Not authorized to access this resource' });
+  }
+};
+
+router.post('/signout', auth, async (req, res) => {
+  try {
+    // find the user by email and delete the session token
+    const user = await User.findOneAndUpdate({ email: req.user.email }, { sessionToken: '' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
