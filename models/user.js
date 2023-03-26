@@ -202,6 +202,9 @@ router.post('/forget_password', async (req, res) => {
     res.status(500).json({ message: 'An error occurred.' });
   }
 });
-
+router.get('/allusers', async (req, res) => {
+  const users = await User.find();
+  res.send(users);
+})
 
 module.exports = router;
