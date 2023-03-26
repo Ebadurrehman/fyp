@@ -230,7 +230,13 @@ router.post('/forget_password', async (req, res) => {
 });
 router.get('/allusers', async (req, res) => {
   const users = await User.find();
-  res.send(users);
+  try{
+    res.send(users);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'An error occurred.' });
+  }
+
 })
 
 module.exports = router;
