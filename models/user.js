@@ -238,5 +238,16 @@ router.get('/allusers', async (req, res) => {
   }
 
 })
+router.get('/test', async (req, res) => {
+  const users = await User.find();
+  try{
+    res.send(users.shedule.available);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'An error occurred.' });
+  }
+
+})
+
 
 module.exports = router;
