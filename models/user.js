@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../schema/user');
-// const Schedule = require('../schema/schedule');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -9,7 +8,6 @@ const dotenv = require('dotenv').config();
 const JWT_KEY = process.env.JWT_KEY;
 const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
-//const bcrypt = require("bcryptjs");
 
 const app = express();
 app.use(bodyParser.json());
@@ -138,18 +136,6 @@ router.post('/signin', async (req, res) => {
   }
 });
 
-//Signout API
-// router.post('/signout', async (req, res) => {
-//   try {
-//     // Clear the token from the client-side by removing the token cookie
-//     res.clearCookie('token');
-    
-//     res.status(200).json({ message: 'Sign out successful' });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
 
 //Sign Out API
 const auth = (req, res, next) => {
@@ -239,35 +225,20 @@ router.get('/allusers', async (req, res) => {
   }
 
 })
-// router.get('/test', async (req, res) => {
-//   const users = await User.find();
-//   try{
-//     res.send(users.schedule.available);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: 'An error occurred.' });
-//   }
-
-// })
 
 
 router.post('/users/:id/schedule', async (req, res) => {
-  console.log("ASDASDASDSD")
-
   const id = req.params.id;
   const { day, start_time, end_time, campus } = req.body;
-  
   try {
     const user = await User.findById(id);
-    
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
-
     if (!Array.isArray(user.schedule) || !user.schedule) {
       user.schedule = [];
     }
-
+    
     let courseTime = {
       day,
       start: start_time,
@@ -277,10 +248,6 @@ router.post('/users/:id/schedule', async (req, res) => {
 
     user.schedule.push(courseTime);
 
-    // user.schedule.day = day;
-    // user.schedule.start_time = start_time;
-    // user.schedule.end_time = end_time;
-    // user.schedule.campus = campus;
     
     await user.save();
     
