@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../schema/user');
+// const Schedule = require('../schema/schedule');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -238,16 +239,58 @@ router.get('/allusers', async (req, res) => {
   }
 
 })
-router.get('/test', async (req, res) => {
-  const users = await User.find();
-  try{
-    res.send(users.shedule.available);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: 'An error occurred.' });
-  }
+// router.get('/test', async (req, res) => {
+//   const users = await User.find();
+//   try{
+//     res.send(users.schedule.available);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: 'An error occurred.' });
+//   }
 
-})
+// })
+
+
+router.post('/users/:id/schedule', async (req, res) => {
+  console.log("ASDASDASDSD")
+
+  const id = req.params.id;
+  const { day, start_time, end_time, campus } = req.body;
+  
+  try {
+    const user = await User.findById(id);
+    
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (!Array.isArray(user.schedule) || !user.schedule) {
+      user.schedule = [];
+    }
+
+    let courseTime = {
+      day,
+      start: start_time,
+      end: end_time,
+      campus
+    };
+
+    user.schedule.push(courseTime);
+
+    // user.schedule.day = day;
+    // user.schedule.start_time = start_time;
+    // user.schedule.end_time = end_time;
+    // user.schedule.campus = campus;
+    
+    await user.save();
+    
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 
 
 module.exports = router;

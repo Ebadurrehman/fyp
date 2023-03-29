@@ -6,83 +6,102 @@ const roleSchema=new Schema({
   role:Boolean, //enum
   campus:Boolean //enum
 })
+// const scheduleSchema = new Schema({
+//   monday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+// },
+//   tuesday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   },
+//   wednesday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   },
+//   thursday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   },
+//   friday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   },
+//   saturday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   },
+//   sunday: {
+//     type: {
+//       available: Boolean,
+//       role:  {
+//         type: roleSchema
+//       }},
+//     default: {
+//       available: true,
+//   }
+//   }
+// });
 const scheduleSchema = new Schema({
-  monday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
-},
-  tuesday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
+  day: {
+    type: String,
+    required: true
   },
-  wednesday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
+  start: {
+    type: String,
+    required: true
   },
-  thursday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
+  end: {
+    type: String,
+    required: true
   },
-  friday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
-  },
-  saturday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
-  },
-  sunday: {
-    type: {
-      available: Boolean,
-      role:  {
-        type: roleSchema
-      }},
-    default: {
-      available: true,
-  }
+  campus: {
+    type: String,
+    enum: ['campus1', 'campus2'],
+    required: true
   }
 });
 
 let userschema = new Schema({
-  schedule: {
+  schedule: [{
     type: scheduleSchema
-  },
+  }],
   username: {
     type: String
   },
