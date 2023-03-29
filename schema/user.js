@@ -13,11 +13,22 @@ const scheduleSchema = new Schema({
     type: String,
     required: true
   },
-  campus: {
+  start_campus: {
     type: String,
     enum: ['campus1', 'campus2'],
     required: true
+  },
+  end_campus: {
+    type: String,
+    enum: ['campus1', 'campus2'],
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ['driver', 'passenger'],
+    required: true
   }
+
 });
 
 let userschema = new Schema({
