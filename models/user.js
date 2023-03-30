@@ -285,5 +285,24 @@ router.put('/users/shedule/:user_id/:schedule_id', async (req, res) => {
   }
 })
 
+router.get('/allshedule/:userId/:sheduleId', async (req, res) => {
+  const userId=req.params.userId
+  const sch_Id = req.params.sheduleId;
+  const user = await User.findById(userId);
+  const id = user.schedule[0]["_id"];
 
+  try{
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (sch_Id!=id) {
+      return res.status(404).json({ message: 'schedule not found' });
+    }
+    res.json(user.schedule)
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'An error occurred.' });
+  }
+
+})
 module.exports = router;
