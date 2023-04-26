@@ -57,7 +57,17 @@ let userschema = new Schema({
   verified: {
     type: Boolean,
     default: false
-  }
+  },
+  location:[
+    {
+     latitude:{
+       type:String
+     }, 
+     longitude:{
+      type:String
+    }  
+    }
+  ]
   })
 
 module.exports = mongoose.model('user',userschema)

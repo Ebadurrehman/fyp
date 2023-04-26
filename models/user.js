@@ -244,7 +244,8 @@ router.post('/users/:id/schedule', async (req, res) => {
       end: end_time,
       start_campus:start_campus,
       end_campus:end_campus,
-      role:role
+      role:role,
+      flag:true
     };
     user.schedule.push(courseTime);
     await user.save();
@@ -255,26 +256,25 @@ router.post('/users/:id/schedule', async (req, res) => {
   }
 });
 //edit schedule
-router.put('/users/shedule/:user_id/:schedule_id', async (req, res) => {
+router.put('/users/shedule/:user_id/:day', async (req, res) => {
   const userId=req.params.user_id
-  const sch_Id = req.params.schedule_id;
+  const day = req.params.day;
+
   const {start_time, end_time, start_campus,end_campus,role } = req.body;
-  try {
+  
     const user = await User.findById(userId);
-    //const schedule= await user.schedule.find(sch_Id)
-    const id = user.schedule[0]["_id"];
-    
+    const id = user.schedule[1]["_id"];
+    const daySch = user.schedule.filter(schedule => schedule.day === day);
+    //console.log(mondaySch[0].start)
+    try{
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    if (sch_Id!=id) {
-      return res.status(404).json({ message: 'schedule not found' });
-    }
-    user.schedule[0]["start"]=start_time
-    user.schedule[0]["end"]=end_time
-    user.schedule[0]["start_campus"]=start_campus
-    user.schedule[0]["end_campus"]=end_campus
-    user.schedule[0]["role"]=role
+    daySch[0].start=start_time
+    daySch[0].end=end_time
+    daySch[0].start_campus=start_campus
+    daySch[0].end_campus=end_campus
+    daySch[0].role=role
     await user.save()
     res.json(user.schedule);
   }
@@ -284,7 +284,7 @@ router.put('/users/shedule/:user_id/:schedule_id', async (req, res) => {
     res.status(500).send("Server Error");
   }
 })
-
+  
 router.get('/allshedule/:userId/:sheduleId', async (req, res) => {
   const userId=req.params.userId
   const sch_Id = req.params.sheduleId;
@@ -305,4 +305,46 @@ router.get('/allshedule/:userId/:sheduleId', async (req, res) => {
   }
 
 })
+///DAY
+router.get('/day/:userId/:day', async (req, res) => {
+  const day=req.params.day
+  const userId=req.params.userId
+  const users = await User.findById(userId);
+  const shedule=users.schedule
+  var rday=[];
+  for (let i=0; i< shedule.length; i++){
+    if(
+      shedule[i].day=day
+    )
+    rday=shedule[i]
+  }
+   try{
+
+      res.send(rday)
+   } catch (error) {
+     console.log(error);
+     res.status(500).json({ message: 'An error occurred.' });
+   }
+})
+router.post('/:userId/location', async (req, res) => {
+  const { latitude, longitude } = req.body;
+  const userId=req.params.userId
+
+  try {
+    const user = await User.findById(userId);
+    //const user = await UserLocation.create({ userId, latitude, longitude });
+   // res.status(201).json(userLocation);
+  // console.log(user)
+   user.location.push({
+     latitude:latitude,
+     longitude:longitude
+   })
+   res.send(" saved user location" );
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'Failed to save user location' });
+  }
+});
+
 module.exports = router;
