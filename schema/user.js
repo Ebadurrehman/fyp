@@ -3,30 +3,34 @@ const Schema = mongoose.Schema;
 const scheduleSchema = new Schema({
   day: {
     type: String,
-    required: true
+    //required: true
   },
   start: {
     type: String,
-    required: true
+    //required: true
   },
   end: {
     type: String,
-    required: true
+    //required: true
   },
   start_campus: {
     type: String,
-    enum: ['campus1', 'campus2'],
-    required: true
+    enum: ['main', 'city'],
+    //required: true
   },
   end_campus: {
     type: String,
-    enum: ['campus1', 'campus2'],
-    required: true
+    enum: ['main', 'city'],
+    //required: true
   },
   role: {
     type: String,
     enum: ['driver', 'passenger'],
-    required: true
+    //required: true
+  },
+  flag:{
+    type:Boolean,
+    default:false
   }
 
 });
