@@ -332,9 +332,6 @@ router.post('/:userId/location', async (req, res) => {
 
   try {
     const user = await User.findById(userId);
-    //const user = await UserLocation.create({ userId, latitude, longitude });
-   // res.status(201).json(userLocation);
-  // console.log(user)
    user.location.push({
      latitude:latitude,
      longitude:longitude
