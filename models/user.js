@@ -229,7 +229,7 @@ router.get('/allusers', async (req, res) => {
 
 })
 
-
+//post schedule
 router.post('/users/:id/schedule', async (req, res) => {
   const id = req.params.id;
   const { day, start_time, end_time, start_campus,end_campus,role } = req.body;
@@ -250,9 +250,18 @@ router.post('/users/:id/schedule', async (req, res) => {
       role:role,
       flag:true
     };
+   var chck=false
+   for(let i=0; i<user.schedule.length; i++){
+     if(user.schedule[i].day==day)
+     chck=true
+   }
+   if(chck==false){
     user.schedule.push(courseTime);
     await user.save();
     res.json(user);
+   }
+   else
+   res.send('day already')
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
@@ -317,7 +326,7 @@ router.get('/day/:userId/:day', async (req, res) => {
   var rday=[];
   for (let i=0; i< shedule.length; i++){
     if(
-      shedule[i].day=day
+      shedule[i].day==day
     )
     rday=shedule[i]
   }
@@ -397,12 +406,6 @@ async function getDirections() {
   const { routes } = response.data;
   console.log(response.data)
   return routes;
-
-  // // Extract polylines of main route and alternative routes
-  // const mainRoutePolyline = routes[0].overview_polyline.points;
-  // const alternativeRoutePolylines = routes.slice(1).map(route => route.overview_polyline.points);
-
-  // return { mainRoutePolyline, alternativeRoutePolylines };
 }
 
 router.get('/mapdirections', async (req, res) => {
@@ -414,5 +417,26 @@ router.get('/mapdirections', async (req, res) => {
     res.status(500).send('Error retrieving directions');
   }
 });
-
+router.get('/matches/:userid/:day', async (req, res) => {
+   const userid=req.params.userid
+   const user = await User.findById(userid)
+   const day=req.params.day
+   const schedul=user.schedule
+   var uday;
+   for(let i=0; i<schedul.length; i++){
+     if(schedul[i].day==day){
+       uday=schedul[i]
+     }
+   }
+   console.log(uday)
+  try {
+    const users = await User.find({'schedule.day':day},{email:1,_id:0});
+    const emails=users.map(user=>user.email);
+    res.send(emails)
+    //res.send("no one is available")
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error');
+  }
+});
 module.exports = router;
