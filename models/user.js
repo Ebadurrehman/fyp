@@ -417,20 +417,38 @@ router.get('/mapdirections', async (req, res) => {
     res.status(500).send('Error retrieving directions');
   }
 });
+
+//Matches API
 router.get('/matches/:userid/:day', async (req, res) => {
    const userid=req.params.userid
    const user = await User.findById(userid)
    const day=req.params.day
    const schedul=user.schedule
    var uday;
+   var start_time;
+   var start_campus;
+   var role;
+   var users;
    for(let i=0; i<schedul.length; i++){
      if(schedul[i].day==day){
        uday=schedul[i]
      }
    }
+   
+   start_time = uday.start
+   console.log(start_time)
    console.log(uday)
+   start_campus = uday.start_campus
+   role = uday.role
+
   try {
-    const users = await User.find({'schedule.day':day},{email:1,_id:0});
+    if(role == 'driver'){
+      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus, 'schedule.role': 'passenger' },{email:1,_id:0});
+    }
+    else{
+      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{email:1,_id:0});
+    }
+    
     const emails=users.map(user=>user.email);
     res.send(emails)
     //res.send("no one is available")
