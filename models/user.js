@@ -8,6 +8,9 @@ const dotenv = require('dotenv').config();
 const JWT_KEY = process.env.JWT_KEY;
 const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
+const polyline = require('polyline');
+// const { Client } = require('pg');
 
 const app = express();
 app.use(bodyParser.json());
@@ -341,6 +344,74 @@ router.post('/:userId/location', async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Failed to save user location' });
+  }
+});
+
+//Google Maps API
+router.get('/directions', (req, res) => {
+  const origin = req.query.origin;
+  const destination = req.query.destination;
+  const apiKey = process.env.API_KEY;
+
+  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`;
+
+  axios.get(url)
+    .then(response => {
+      res.json(response.data);
+    })
+    .catch(error => {
+      console.error(error);
+      res.status(500).send('Error retrieving directions');
+    });
+});
+
+const currentUserLocation = {
+  lat: 24.9125185,
+  lng: 67.1153584
+};
+
+const universityLocation = {
+  lat: 24.8676078,
+  lng: 67.0255749
+};
+
+// Set up Google Maps API client
+const googleMapsClient = axios.create({
+  baseURL: 'https://maps.googleapis.com/maps/api',
+  timeout: 10000,
+  params: {
+    key: process.env.API_KEY
+  }
+});
+
+// Make API call to get directions between current user and university
+async function getDirections() {
+  const response = await googleMapsClient.get('/directions/json', {
+    params: {
+      origin: `${currentUserLocation.lat},${currentUserLocation.lng}`,
+      destination: `${universityLocation.lat},${universityLocation.lng}`,
+      alternatives: true
+    }
+  });
+
+  const { routes } = response.data;
+  console.log(response.data)
+  return routes;
+
+  // // Extract polylines of main route and alternative routes
+  // const mainRoutePolyline = routes[0].overview_polyline.points;
+  // const alternativeRoutePolylines = routes.slice(1).map(route => route.overview_polyline.points);
+
+  // return { mainRoutePolyline, alternativeRoutePolylines };
+}
+
+router.get('/mapdirections', async (req, res) => {
+  try {
+    const directions = await getDirections();
+    res.json(directions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving directions');
   }
 });
 
