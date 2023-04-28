@@ -338,23 +338,58 @@ router.get('/day/:userId/:day', async (req, res) => {
      res.status(500).json({ message: 'An error occurred.' });
    }
 })
+
+//Post Coordinates
 router.post('/:userId/location', async (req, res) => {
   const { latitude, longitude } = req.body;
-  const userId=req.params.userId
+  const userId = req.params.userId;
 
   try {
     const user = await User.findById(userId);
-   user.location.push({
-     latitude:latitude,
-     longitude:longitude
-   })
-   res.send(" saved user location" );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const existingLocation = user.location.find(loc => loc.latitude === latitude && loc.longitude === longitude);
+
+    if (existingLocation) {
+      return res.status(400).json({ error: 'Location already exists for the user' });
+    }
+
+    user.location.push({
+      latitude: latitude,
+      longitude: longitude
+    });
+
+    await user.save();
+
+    res.send('Saved user location');
 
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Failed to save user location' });
   }
 });
+
+// router.post('/:userId/location', async (req, res) => {
+//   const { latitude, longitude } = req.body;
+//   const userId=req.params.userId
+
+//   try {
+//     const user = await User.findById(userId);
+//    user.location.push({
+//      latitude:latitude,
+//      longitude:longitude
+//    })
+//    await user.save();
+//    res.send(" saved user location" );
+
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: 'Failed to save user location' });
+//   }
+// });
 
 //Google Maps API
 router.get('/directions', (req, res) => {
@@ -429,6 +464,13 @@ router.get('/matches/:userid/:day', async (req, res) => {
    var start_campus;
    var role;
    var users;
+   const user_lat = user.location[0].latitude;
+   const user_lng = user.location[0].longitude;
+   const destLat = "24.9396119";
+   const destLng = "67.1142199";
+   let matches;
+   let filtered_users;
+  
    for(let i=0; i<schedule.length; i++){
      if(schedule[i].day==day){
        uday=schedule[i]
@@ -443,15 +485,55 @@ router.get('/matches/:userid/:day', async (req, res) => {
 
   try {
     if(role == 'driver'){
-      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus, 'schedule.role': 'passenger' },{email:1,_id:0});
+      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus, 'schedule.role': 'passenger' },{location:1,_id:0});
     }
     else{
-      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{email:1,_id:0});
+      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{location:1,_id:0});
+    }
+    console.log(users)
+    console.log(user.location[0].latitude)
+    const locations = users.map(user => user.location[0]); // getting only the first location of each user
+    const coordinates = locations.map(location => ({
+      lat: parseFloat(location.latitude),
+      lng: parseFloat(location.longitude)
+    }));
+
+    if(coordinates.length < 2){
+      res.send("no one is available")
+    }else{
+      
+    getCoordinatesWithin3km(user_lat, user_lng, destLat, destLng, coordinates, process.env.API_KEY)
+  .then(async (filteredCoordinates) => {
+    //console.log(filteredCoordinates);
+    matches = filteredCoordinates;
+    console.log(matches)
+    console.log(matches.length)
+    
+    // assuming response is the JSON object you received
+    const latitudes = [];
+    const longitudes = [];
+    
+
+    for (let i = 0; i < matches.length; i++) {
+      latitudes.push(matches[i].lat);
+      longitudes.push(matches[i].lng);
+    }
+    console.log(latitudes)
+    //res.json({ matches });
+
+    filtered_users = await User.find({
+      'location.latitude': { $in: latitudes },
+      'location.longitude': { $in: longitudes }
+    }, {email: 1, username: 1, erp: 1, location: 1, _id: 0});
+    console.log(filtered_users)
+    res.json({ filtered_users });
+  })
+  .catch((error) => {
+    console.error(error);
+  });
     }
     
-    const emails=users.map(user=>user.email);
-    res.send(emails)
-    //res.send("no one is available")
+
   } catch (error) {
     console.error(error);
     res.status(500).send('Error');
@@ -495,4 +577,110 @@ router.get('/matches/:userid/:day', async (req, res) => {
     res.status(500).send('Error');
   }
 });
+
+
+//Function to get Matches
+async function getCoordinatesWithin3km(startLat, startLng, endLat, endLng, coordinates, api_key) {
+  const baseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
+  const url = `${baseUrl}?origin=${startLat},${startLng}&destination=${endLat},${endLng}&key=${api_key}`;
+  const response = await axios.get(url);
+  const routes = response.data.routes;
+
+  if (routes.length === 0) {
+    throw new Error('No routes found');
+  }
+
+  const points = routes[0].overview_polyline.points;
+  const routeCoordinates = decodePolyline(points);
+
+  const filteredCoordinates = coordinates.filter((coordinate) => {
+    const distance = getDistanceFromRoute(routeCoordinates, coordinate);
+    return distance <= 10;
+  });
+
+  return filteredCoordinates;
+}
+
+function decodePolyline(encoded) {
+  const poly = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let b;
+    let shift = 0;
+    let result = 0;
+
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+
+    const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+
+    const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lng += dlng;
+
+    const point = {
+      lat: lat / 1e5,
+      lng: lng / 1e5,
+    };
+    poly.push(point);
+  }
+
+  return poly;
+}
+
+function getDistanceFromRoute(routeCoordinates, coordinate) {
+  let closestDistance = Number.MAX_SAFE_INTEGER;
+  for (let i = 0; i < routeCoordinates.length - 1; i++) {
+    const distance = getDistanceToSegment(
+      routeCoordinates[i].lat,
+      routeCoordinates[i].lng,
+      routeCoordinates[i + 1].lat,
+      routeCoordinates[i + 1].lng,
+      coordinate.lat,
+      coordinate.lng
+    );
+    if (distance < closestDistance) {
+      closestDistance = distance;
+    }
+  }
+  return closestDistance;
+}
+
+function getDistanceToSegment(x1, y1, x2, y2, x3, y3) {
+  const px = x2 - x1;
+  const py = y2 - y1;
+  const something = px * px + py * py;
+  let u = ((x3 - x1) * px + (y3 - y1) * py) / something;
+
+  if (u > 1) {
+    u = 1;
+  } else if (u < 0) {
+    u = 0;
+  }
+
+  const x = x1 + u * px;
+  const y = y1 + u * py;
+
+  const dx = x - x3;
+  const dy = y - y3;
+
+  return Math.sqrt(dx * dx + dy * dy) * 111.319;
+  }
+
+
 module.exports = router;
