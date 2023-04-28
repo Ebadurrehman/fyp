@@ -418,20 +418,20 @@ router.get('/mapdirections', async (req, res) => {
   }
 });
 
-//Matches API
+//Matches API for going to uni
 router.get('/matches/:userid/:day', async (req, res) => {
    const userid=req.params.userid
    const user = await User.findById(userid)
    const day=req.params.day
-   const schedul=user.schedule
+   const schedule=user.schedule
    var uday;
    var start_time;
    var start_campus;
    var role;
    var users;
-   for(let i=0; i<schedul.length; i++){
-     if(schedul[i].day==day){
-       uday=schedul[i]
+   for(let i=0; i<schedule.length; i++){
+     if(schedule[i].day==day){
+       uday=schedule[i]
      }
    }
    
@@ -447,6 +447,44 @@ router.get('/matches/:userid/:day', async (req, res) => {
     }
     else{
       users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{email:1,_id:0});
+    }
+    
+    const emails=users.map(user=>user.email);
+    res.send(emails)
+    //res.send("no one is available")
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error');
+  }
+});
+
+//Matches API for going to home
+router.get('/matches/:userid/:day', async (req, res) => {
+   const userid=req.params.userid
+   const user = await User.findById(userid)
+   const day=req.params.day
+   const schedule=user.schedule
+   var uday;
+   var end_time;
+   var end_campus;
+   var role;
+   var users;
+   for(let i=0; i<schedule.length; i++){
+     if(schedule[i].day==day){
+       uday=schedule[i]
+     }
+   }
+   
+   end_time = uday.end
+   end_campus = uday.end_campus
+   role = uday.role
+
+  try {
+    if(role == 'driver'){
+      users = await User.find({'schedule.day':day, 'schedule.end': end_time, 'schedule.end_campus': end_campus, 'schedule.role': 'passenger' },{email:1,_id:0});
+    }
+    else{
+      users = await User.find({'schedule.day':day, 'schedule.end': end_time, 'schedule.end_campus': end_campus },{email:1,_id:0});
     }
     
     const emails=users.map(user=>user.email);
