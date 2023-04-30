@@ -506,7 +506,6 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
       
     getCoordinatesWithin3km(user_lat, user_lng, destLat, destLng, coordinates, process.env.API_KEY)
   .then(async (filteredCoordinates) => {
-    console.log(filteredCoordinates);
     matches = filteredCoordinates;
     //console.log(matches)
     //console.log(matches.length)
@@ -520,14 +519,14 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
       latitudes.push(matches[i].lat);
       longitudes.push(matches[i].lng);
     }
-    //console.log(latitudes)
+    console.log(latitudes)
     //res.json({ matches });
 
     filtered_users = await User.find({
       'location.latitude': { $in: latitudes },
       'location.longitude': { $in: longitudes }
     }, {email: 1, username: 1, erp: 1, location: 1, _id: 0});
-    //console.log(filtered_users)
+    console.log(filtered_users)
     res.json({ filtered_users });
   })
   .catch((error) => {
