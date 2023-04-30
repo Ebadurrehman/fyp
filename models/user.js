@@ -454,7 +454,7 @@ router.get('/mapdirections', async (req, res) => {
 });
 
 //Matches API for going to uni
-router.get('/matches/:userid/:day', async (req, res) => {
+router.get('/matches_uni/:userid/:day', async (req, res) => {
    const userid=req.params.userid
    const user = await User.findById(userid)
    const day=req.params.day
@@ -478,8 +478,8 @@ router.get('/matches/:userid/:day', async (req, res) => {
    }
    
    start_time = uday.start
-   console.log(start_time)
-   console.log(uday)
+   //console.log(start_time)
+   //console.log(uday)
    start_campus = uday.start_campus
    role = uday.role
 
@@ -490,24 +490,26 @@ router.get('/matches/:userid/:day', async (req, res) => {
     else{
       users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{location:1,_id:0});
     }
-    console.log(users)
-    console.log(user.location[0].latitude)
-    const locations = users.map(user => user.location[0]); // getting only the first location of each user
-    const coordinates = locations.map(location => ({
+    //console.log(users)
+   // console.log(user.location[0].latitude)
+   
+   const locations = users.map(user => user.location[0]); // getting only the first location of each user
+   
+   const coordinates = locations.map(location => ({
       lat: parseFloat(location.latitude),
       lng: parseFloat(location.longitude)
     }));
-
+    //console.log(coordinates)
     if(coordinates.length < 2){
       res.send("no one is available")
     }else{
       
     getCoordinatesWithin3km(user_lat, user_lng, destLat, destLng, coordinates, process.env.API_KEY)
   .then(async (filteredCoordinates) => {
-    //console.log(filteredCoordinates);
+    console.log(filteredCoordinates);
     matches = filteredCoordinates;
-    console.log(matches)
-    console.log(matches.length)
+    //console.log(matches)
+    //console.log(matches.length)
     
     // assuming response is the JSON object you received
     const latitudes = [];
@@ -518,14 +520,14 @@ router.get('/matches/:userid/:day', async (req, res) => {
       latitudes.push(matches[i].lat);
       longitudes.push(matches[i].lng);
     }
-    console.log(latitudes)
+    //console.log(latitudes)
     //res.json({ matches });
 
     filtered_users = await User.find({
       'location.latitude': { $in: latitudes },
       'location.longitude': { $in: longitudes }
     }, {email: 1, username: 1, erp: 1, location: 1, _id: 0});
-    console.log(filtered_users)
+    //console.log(filtered_users)
     res.json({ filtered_users });
   })
   .catch((error) => {
@@ -541,7 +543,7 @@ router.get('/matches/:userid/:day', async (req, res) => {
 });
 
 //Matches API for going to home
-router.get('/matches/:userid/:day', async (req, res) => {
+router.get('/matches_home/:userid/:day', async (req, res) => {
    const userid=req.params.userid
    const user = await User.findById(userid)
    const day=req.params.day
