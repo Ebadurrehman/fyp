@@ -31,8 +31,17 @@ const scheduleSchema = new Schema({
   flag:{
     type:Boolean,
     default:false
-  }
-
+  },
+  request_coming:[
+    {
+      type: String
+    }
+  ],
+  request_going:[
+    {
+      type: String
+    }
+  ]
 });
 
 let userschema = new Schema({

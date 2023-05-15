@@ -581,6 +581,42 @@ router.get('/matches_home/:userid/:day', async (req, res) => {
   }
 });
 
+//Request Coming API
+router.post('/requestcoming/:userid/:day', async (req, res) => {
+  const userid=req.params.userid;
+  const day=req.params.day;
+  const { s_userid } = req.body;
+  const s_user = await User.findById(s_userid);
+  const user = await User.findById(userid);
+  const daySch = user.schedule.filter(schedule => schedule.day === day);
+  try {
+    daySch[0].request_coming = s_userid;
+    await user.save();
+    res.send('request sent')
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving directions');
+  }
+});
+
+//Request Going API
+router.post('/requestgoing/:userid/:day', async (req, res) => {
+  const userid=req.params.userid;
+  const day=req.params.day;
+  const { s_userid } = req.body;
+  const s_user = await User.findById(s_userid);
+  const user = await User.findById(userid);
+  const daySch = user.schedule.filter(schedule => schedule.day === day);
+  try {
+    daySch[0].request_going = s_userid;
+    await user.save();
+    res.send('request sent')
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving directions');
+  }
+});
+
 
 //Function to get Matches
 async function getCoordinatesWithin3km(startLat, startLng, endLat, endLng, coordinates, api_key) {
