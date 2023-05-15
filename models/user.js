@@ -56,7 +56,7 @@ router.post('/verify-otp', async (req, res) => {
 
   //Signup API
   router.post('/signup', async (req, res) => {
-    const { username, email, password, erp } = req.body;
+    const { username, email, password, erp, contact } = req.body;
   
     // Create a new user object
     const salt = await bcrypt.genSalt();
@@ -67,6 +67,7 @@ router.post('/verify-otp', async (req, res) => {
       email,
       password: passwordHash,
       erp,
+      contact,
       otp, // Store the OTP in the database
     });
   
@@ -128,7 +129,7 @@ router.post('/signin', async (req, res) => {
       }, 
       process.env.JWT_KEY, 
       {
-        expiresIn: "1h"
+        expiresIn: "365d"
       },
       );
       res.status(200).json({ message: 'Sign in successful', token: token });
@@ -170,7 +171,7 @@ router.post('/signout', auth, async (req, res) => {
 router.put('/users/:userId', async (req, res) => {
   const userId = req.params.userId;
   //console.log(userId)
-  const { name,password} = req.body;
+  const { name,password, contact} = req.body;
   const salt = await bcrypt.genSalt();
   const passwordHash = await bcrypt.hash(password, salt);
    
@@ -182,6 +183,7 @@ try {
 
     user.username = name || user.username;
     user.password = passwordHash;
+    user.contact = contact;
 
     await user.save();
 

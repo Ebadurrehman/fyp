@@ -58,6 +58,9 @@ let userschema = new Schema({
     type: Boolean,
     default: false
   },
+  contact: {
+    type: String
+  },
   location:[
     {
      latitude:{
