@@ -589,9 +589,12 @@ router.post('/requestcoming/:userid/:day', async (req, res) => {
   const s_user = await User.findById(s_userid);
   const user = await User.findById(userid);
   const daySch = user.schedule.filter(schedule => schedule.day === day);
+  const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
   try {
     daySch[0].request_coming = s_userid;
+    S_daySch[0].request_coming = userid;
     await user.save();
+    await s_user.save();
     res.send('request sent')
   } catch (error) {
     console.error(error);
@@ -607,16 +610,18 @@ router.post('/requestgoing/:userid/:day', async (req, res) => {
   const s_user = await User.findById(s_userid);
   const user = await User.findById(userid);
   const daySch = user.schedule.filter(schedule => schedule.day === day);
+  const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
   try {
     daySch[0].request_going = s_userid;
+    S_daySch[0].request_going = userid;
     await user.save();
+    await s_user.save();
     res.send('request sent')
   } catch (error) {
     console.error(error);
     res.status(500).send('Error retrieving directions');
   }
 });
-
 
 //Function to get Matches
 async function getCoordinatesWithin3km(startLat, startLng, endLat, endLng, coordinates, api_key) {
