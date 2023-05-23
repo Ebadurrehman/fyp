@@ -41,6 +41,16 @@ const scheduleSchema = new Schema({
     {
       type: String
     }
+  ],
+  accept_coming:[
+    {
+      type: String
+    }
+  ],
+  accept_going:[
+    {
+      type: String
+    }
   ]
 });
 
