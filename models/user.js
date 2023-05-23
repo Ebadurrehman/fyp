@@ -680,7 +680,12 @@ router.post('/requestcoming/:userid/:day', async (req, res) => {
   const daySch = user.schedule.filter(schedule => schedule.day === day);
   const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
   try {
-    daySch[0].request_coming = s_userid;
+    daySch[0].request_sent.push({
+      id: s_userid,
+      username: s_user.username,
+      email: s_user.email,
+      erp: s_user.erp
+    });
     S_daySch[0].request_coming = userid;
     await user.save();
     await s_user.save();
@@ -690,7 +695,6 @@ router.post('/requestcoming/:userid/:day', async (req, res) => {
     res.status(500).send('Error retrieving directions');
   }
 });
-
 //Request Going API
 router.post('/requestgoing/:userid/:day', async (req, res) => {
   const userid=req.params.userid;
@@ -701,7 +705,13 @@ router.post('/requestgoing/:userid/:day', async (req, res) => {
   const daySch = user.schedule.filter(schedule => schedule.day === day);
   const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
   try {
-    daySch[0].request_going = s_userid;
+    // daySch[0].request_going = s_userid;
+    daySch[0].request_sent.push({
+      id: s_userid,
+      username: s_user.username,
+      email: s_user.email,
+      erp: s_user.erp
+    });
     S_daySch[0].request_going = userid;
     await user.save();
     await s_user.save();

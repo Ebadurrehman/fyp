@@ -51,10 +51,21 @@ const scheduleSchema = new Schema({
     {
       type: String
     }
-  ],
+  ], 
   request_sent:[
     {
-      type: String
+     id:{
+       type:String
+     }, 
+     username:{
+      type:String
+    },
+    email:{
+      type:String
+    }, 
+    erp:{
+      type:String
+    },
     }
   ]
 });
@@ -96,5 +107,4 @@ let userschema = new Schema({
     }
   ]
   })
-
 module.exports = mongoose.model('user',userschema)
