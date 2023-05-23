@@ -686,7 +686,14 @@ router.post('/requestcoming/:userid/:day', async (req, res) => {
       email: s_user.email,
       erp: s_user.erp
     });
-    S_daySch[0].request_coming = userid;
+    //S_daySch[0].request_coming = userid;
+    S_daySch[0].request_coming.push({
+      id: userid,
+      username: user.username,
+      email: user.email,
+      erp: user.erp
+    });
+    console.log(S_daySch[0]);
     await user.save();
     await s_user.save();
     res.send('request sent')
