@@ -487,10 +487,31 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
 
   try {
     if(role == 'driver'){
-      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus, 'schedule.role': 'passenger' },{location:1,_id:0});
+      users = await User.find({
+        schedule: {
+          $elemMatch: {
+            day: day,
+            start: start_time,
+            start_campus: start_campus,
+            role: 'passenger'
+          }
+        }
+      }, { location: 1, _id: 0 });
     }
     else{
-      users = await User.find({'schedule.day':day, 'schedule.start': start_time, 'schedule.start_campus': start_campus },{location:1,_id:0});
+      users = await User.find({
+        schedule: {
+          $elemMatch: {
+            day: day,
+            start: start_time,
+            start_campus: start_campus,
+            $or: [
+              { role: 'driver' },
+              { role: 'passenger' } // Replace 'anotherRole' with the desired role
+            ]
+          }
+        }
+      }, { location: 1, _id: 0 });
     }
     //console.log(users)
    // console.log(user.location[0].latitude)
@@ -501,8 +522,8 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
       lat: parseFloat(location.latitude),
       lng: parseFloat(location.longitude)
     }));
-    //console.log(coordinates)
-    if(coordinates.length < 2){
+    console.log(coordinates)
+    if(coordinates.length < 1){
       res.send("no one is available")
     }else{
       
@@ -527,7 +548,7 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
     filtered_users = await User.find({
       'location.latitude': { $in: latitudes },
       'location.longitude': { $in: longitudes }
-    }, {email: 1, username: 1, erp: 1, location: 1, _id: 0});
+    }, {email: 1, username: 1, erp: 1, location: 1, _id: 1});
     console.log(filtered_users)
     res.json({ filtered_users });
   })
@@ -545,40 +566,108 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
 
 //Matches API for going to home
 router.get('/matches_home/:userid/:day', async (req, res) => {
-   const userid=req.params.userid
-   const user = await User.findById(userid)
-   const day=req.params.day
-   const schedule=user.schedule
-   var uday;
-   var end_time;
-   var end_campus;
-   var role;
-   var users;
-   for(let i=0; i<schedule.length; i++){
-     if(schedule[i].day==day){
-       uday=schedule[i]
-     }
+  const userid=req.params.userid
+  const user = await User.findById(userid)
+  const day=req.params.day
+  const schedule=user.schedule
+  var uday;
+  var end_time;
+  var end_campus;
+  var role;
+  var users;
+  const user_lat = user.location[0].latitude;
+  const user_lng = user.location[0].longitude;
+  const destLat = "24.9396119";
+  const destLng = "67.1142199";
+  let matches;
+  let filtered_users;
+ 
+  for(let i=0; i<schedule.length; i++){
+    if(schedule[i].day==day){
+      uday=schedule[i]
+    }
+  }
+  
+  end_time = uday.end
+  //console.log(start_time)
+  //console.log(uday)
+  end_campus = uday.end_campus
+  role = uday.role
+
+ try {
+   if(role == 'driver'){
+     users = await User.find({
+       schedule: {
+         $elemMatch: {
+           day: day,
+           end: end_time,
+           end_campus: end_campus,
+           role: 'passenger'
+         }
+       }
+     }, { location: 1, _id: 0 });
+   }
+   else{
+     users = await User.find({
+       schedule: {
+         $elemMatch: {
+           day: day,
+           end: end_time,
+           end_campus: end_campus,
+           //role: 'passenger'
+         }
+       }
+     }, { location: 1, _id: 0 });
+   }
+   //console.log(users)
+  // console.log(user.location[0].latitude)
+  
+  const locations = users.map(user => user.location[0]); // getting only the first location of each user
+  
+  const coordinates = locations.map(location => ({
+     lat: parseFloat(location.latitude),
+     lng: parseFloat(location.longitude)
+   }));
+   //console.log(coordinates)
+   if(coordinates.length < 2){
+     res.send("no one is available")
+   }else{
+     
+   getCoordinatesWithin3km(user_lat, user_lng, destLat, destLng, coordinates, process.env.API_KEY)
+ .then(async (filteredCoordinates) => {
+   matches = filteredCoordinates;
+   //console.log(matches)
+   //console.log(matches.length)
+   
+   // assuming response is the JSON object you received
+   const latitudes = [];
+   const longitudes = [];
+   
+
+   for (let i = 0; i < matches.length; i++) {
+     latitudes.push(matches[i].lat);
+     longitudes.push(matches[i].lng);
+   }
+   console.log(latitudes)
+   //res.json({ matches });
+
+   filtered_users = await User.find({
+     'location.latitude': { $in: latitudes },
+     'location.longitude': { $in: longitudes }
+   }, {email: 1, username: 1, erp: 1, location: 1, _id: 1});
+   console.log(filtered_users)
+   res.json({ filtered_users });
+ })
+ .catch((error) => {
+   console.error(error);
+ });
    }
    
-   end_time = uday.end
-   end_campus = uday.end_campus
-   role = uday.role
 
-  try {
-    if(role == 'driver'){
-      users = await User.find({'schedule.day':day, 'schedule.end': end_time, 'schedule.end_campus': end_campus, 'schedule.role': 'passenger' },{email:1,_id:0});
-    }
-    else{
-      users = await User.find({'schedule.day':day, 'schedule.end': end_time, 'schedule.end_campus': end_campus },{email:1,_id:0});
-    }
-    
-    const emails=users.map(user=>user.email);
-    res.send(emails)
-    //res.send("no one is available")
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error');
-  }
+ } catch (error) {
+   console.error(error);
+   res.status(500).send('Error');
+ }
 });
 
 //Request Coming API

@@ -51,6 +51,11 @@ const scheduleSchema = new Schema({
     {
       type: String
     }
+  ],
+  request_sent:[
+    {
+      type: String
+    }
   ]
 });
 
