@@ -641,14 +641,33 @@ router.get('/matches_home/:userid/:day', async (req, res) => {
    //console.log(users)
   // console.log(user.location[0].latitude)
   
-  const locations = users.map(user => user.location[0]); // getting only the first location of each user
+  // const locations = users.map(user => user.location[0]); // getting only the first location of each user
   
-  const coordinates = locations.map(location => ({
-     lat: parseFloat(location.latitude),
-     lng: parseFloat(location.longitude)
-   }));
+  // const coordinates = locations.map(location => ({
+  //    lat: parseFloat(location.latitude),
+  //    lng: parseFloat(location.longitude)
+  //  }));
+  const locations = users.map(user => {
+    if (user.location && user.location[0] && user.location[0].latitude) {
+      return user.location[0];
+    } else {
+      return null;
+    }
+  });
+  
+  console.log(locations);
+  
+  const coordinates = locations
+    .filter(location => location !== null)
+    .map(location => ({
+      lat: parseFloat(location.latitude),
+      lng: parseFloat(location.longitude)
+    }));
+  
+  console.log(coordinates);
+  
    //console.log(coordinates)
-   if(coordinates.length < 2){
+   if(coordinates.length < 1){
      res.send("no one is available")
    }else{
      
