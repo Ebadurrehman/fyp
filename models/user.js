@@ -119,7 +119,7 @@ router.post('/signin', async (req, res) => {
     const verify = await User.findOne({ email });
     const isMatch = await bcrypt.compare(password, userH.password);
     if (!verify.verified) return res.status(400).json({ msg: "Not Verified." });
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials." });
+    if(!isMatch) return res.status(400).json({ msg: "Invalid credentials." });
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
     } else {
@@ -782,44 +782,70 @@ router.post('/acceptgoing/:userid/:day', async (req, res) => {
   const user = await User.findById(userid);
   const daySch = user.schedule.filter(schedule => schedule.day === day);
   const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
+  //console.log(S_daySch[0].request_going)
+  //daySch[0].request_going[0]=[]
+for (let i = 0; i < S_daySch[0].request_sent.length; i++) {
+  if (S_daySch[0].request_sent[i].erp ==user.erp) {
+    S_daySch[0].request_sent.splice(i, 1);
+    break;
+  }
+}
 
-  var available_id;
+for (let i = 0; i < daySch[0].request_going.length; i++) {
+  if (daySch[0].request_going[i].erp == s_user.erp) {
+    daySch[0].request_going.splice(i, 1);
+    break;
+  }
+} 
 
-  try{
 
-    if(daySch[0].request_going.length>0){
-    for ( i = 0; i < daySch[0].request_going.length; i++) {
-      if(daySch[0].request_going[i]==s_userid){
-      available_id = daySch[0].request_going[i];
-      }
-      else {
-        res.status(500).send('No user with this req');
-      }
-    }
+daySch[0].accept_going.push({
+  id: s_userid,
+  username: s_user.username,
+  email: s_user.email,
+  erp: s_user.erp
+});
+await user.save();
+await s_user.save();
+res.send(daySch[0].accept_going)
+//   var available_id;
+
+//   try{
+
+//     if(daySch[0].request_going.length>0){
+//     for ( i = 0; i < daySch[0].request_going.length; i++) {
+//       if(daySch[0].request_going[i]==s_userid){
+//       available_id = daySch[0].request_going[i];
+//       }
+//       else {
+//         res.status(500).send('No user with this req');
+//       }
+//     }
     
-    S_daySch[0].accept_going = userid;
-    console.log(available_id)
-    let index = daySch[0].request_going.indexOf(available_id);
-    console.log(index)
-// Remove the element if found
-if (index !== -1) {
-  daySch[0].request_going.splice(index, 1);
-}
+//     S_daySch[0].accept_going = userid;
+//     console.log(available_id)
+//     let index = daySch[0].request_going.indexOf(available_id);
+//     console.log(index)
+// // Remove the element if found
+// if (index !== -1) {
+//   daySch[0].request_going.splice(index, 1);
+// }
 
-    await user.save();
-    await s_user.save()
-    res.send('request ok')
+//     await user.save();
+//     await s_user.save()
+//     res.send('request ok')
 
-  }
+//   }
 
-else {
-  res.send('No req exist');
-}
-  }
-   catch (error) {
-    console.error(error);
-    res.status(500).send('Error retrieving req');
-  }
+// else {
+//   res.send('No req exist');
+// }
+//   }
+//    catch (error) {
+//     console.error(error);
+//     res.status(500).send('Error retrieving req');
+//   }
+//res.send('request ok')
 });
 //Accept coming API
 router.post('/acceptcoming/:userid/:day', async (req, res) => {
