@@ -826,7 +826,7 @@ router.post('/acceptcoming/:userid/:day', async (req, res) => {
 
     if(daySch[0].request_coming.length>0){
     for ( i = 0; i < daySch[0].request_coming.length; i++) {
-      if(daySch[0].request_coming[i]==s_userid){
+      if(daySch[0].request_coming[i].id==s_userid){
       available_id = daySch[0].request_coming[i];
       }
       else {
