@@ -567,7 +567,7 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
     filtered_users = await User.find({
       'location.latitude': { $in: latitudes },
       'location.longitude': { $in: longitudes }
-    }, {email: 1, username: 1, erp: 1, location: 1, _id: 1,'schedule.role':1});
+    }, {email: 1, username: 1, erp: 1, location: 1, _id:1 ,'schedule.role':1 });
     //console.log(filtered_users[0])
     res.json({ filtered_users });
   })
