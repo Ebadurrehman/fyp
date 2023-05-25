@@ -785,7 +785,7 @@ router.post('/acceptgoing/:userid/:day', async (req, res) => {
   //console.log(S_daySch[0].request_going)
   //daySch[0].request_going[0]=[]
 for (let i = 0; i < S_daySch[0].request_sent.length; i++) {
-  if (S_daySch[0].request_sent[i].erp ==user.erp) {
+  if (S_daySch[0].request_sent[i].erp == user.erp) {
     S_daySch[0].request_sent.splice(i, 1);
     break;
   }
@@ -826,49 +826,38 @@ router.post('/acceptcoming/:userid/:day', async (req, res) => {
   const daySch = user.schedule.filter(schedule => schedule.day === day);
   const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
 
-  var available_id;
-
-  try{
-
-    if(daySch[0].request_coming.length>0){
-    for ( i = 0; i < daySch[0].request_coming.length; i++) {
-      if(daySch[0].request_coming[i].id==s_userid){
-      available_id = daySch[0].request_coming[i];
-      }
-      else {
-       return res.json({ message: 'no req' });
-
-        
-      }
+  for (let i = 0; i < S_daySch[0].request_sent.length; i++) {
+    if (S_daySch[0].request_sent[i].erp == user.erp) {
+      S_daySch[0].request_sent.splice(i, 1);
+      break;
     }
-    
-    S_daySch[0].accept_coming = userid;
-    daySch[0].accept_coming = s_userid;
-
-    console.log(available_id)
-    let index = daySch[0].request_coming.indexOf(available_id);
-    console.log(index)
-// Remove the element if found
-if (index !== -1) {
-  daySch[0].request_coming.splice(index, 1);
-}
-
-    await user.save();
-    await s_user.save()
-    res.send('request ok')
-
   }
-
-else {
-  res.send('No req exist');
-}
-  }
-   catch (error) {
-    console.error(error);
-    res.status(500).send('Error retrieving req');
-  }
-});
-
+  
+  for (let i = 0; i < daySch[0].request_coming.length; i++) {
+    if (daySch[0].request_coming[i].erp == s_user.erp) {
+      daySch[0].request_coming.splice(i, 1);
+      break;
+    }
+  } 
+  
+  
+  daySch[0].accept_coming.push({
+    id: s_userid,
+    username: s_user.username,
+    email: s_user.email,
+    erp: s_user.erp
+  });
+  S_daySch[0].accept_coming.push({
+    id: userid,
+    username: user.username,
+    email: user.email,
+    erp: user.erp
+  });
+  await user.save();
+  await s_user.save();
+  res.send(daySch[0].accept_coming)
+  
+  });
 /// reject request
 router.post('/rejectreq/:userid/:day', async (req, res) => {
   const userid=req.params.userid;
@@ -878,60 +867,27 @@ router.post('/rejectreq/:userid/:day', async (req, res) => {
   const user = await User.findById(userid);
   const daySch = user.schedule.filter(schedule => schedule.day === day);
   const S_daySch = s_user.schedule.filter(schedule => schedule.day === day);
+///////
+try{
+for (let i = 0; i < daySch[0].request_coming.length; i++) {
+  if (daySch[0].request_coming[i].erp == s_user.erp) {
+    daySch[0].request_coming.splice(i, 1);
+    break;
+  }
+} 
+for (let i = 0; i < daySch[0].request_going.length; i++) {
+  if (daySch[0].request_going[i].erp == s_user.erp) {
+    daySch[0].request_going.splice(i, 1);
+    break;
+  }
+} 
 
-  var available_id;
-
-  try{
-    if(daySch[0].accept_coming.length>0){
-      for ( i = 0; i < daySch[0].accept_coming.length; i++) {
-        if(daySch[0].accept_coming[i].id==s_userid){
-          let index = daySch[0].accept_coming.indexOf(daySch[0].accept_coming[i]);
-          //console.log(index)
-      // Remove the element if found
-      if (index !== -1) {
-        daySch[0].accept_coming.splice(index, 1);
-        await user.save();
-      await s_user.save()
-      }
-
-        }
-
-        else {
-         return res.json({ message: 'no req 1' });
-  
-          
-        }
-      }
       await user.save();
       await s_user.save()
       return res.json({ message: 'done' });
     
-    }
     
-    if(daySch[0].accept_going.length>0){
-      for ( i = 0; i < daySch[0].accept_going.length; i++) {
-        console.log(daySch[0].accept_going[i])
-        if(daySch[0].accept_going[i].id==s_userid){
-          let index = daySch[0].accept_going.indexOf(daySch[0].accept_going[i]);
-          //console.log(index)
-      // Remove the element if found
-      if (index !== -1) {
-        daySch[0].accept_going.splice(index, 1);
-      }
-        }
-        else {
-         return res.json({ message: 'no req 2' });
-  
-          
-        }
-      }
-      await user.save();
-      await s_user.save()
-      return res.json({ message: 'done' });
-     
-    }
-    else return res.json({ message: 'no req F' });
-  
+    
   }
    catch (error) {
     console.error(error);
