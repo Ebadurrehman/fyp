@@ -530,7 +530,7 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
     }
   });
   
-  console.log(locations);
+  //console.log(locations);
   
   const coordinates = locations
     .filter(location => location !== null)
@@ -539,9 +539,9 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
       lng: parseFloat(location.longitude)
     }));
   
-  console.log(coordinates);
+  //console.log(coordinates);
   
-    console.log(coordinates)
+    //console.log(coordinates)
     if(coordinates.length < 1){
       res.send("no one is available")
     }else{
@@ -561,14 +561,14 @@ router.get('/matches_uni/:userid/:day', async (req, res) => {
       latitudes.push(matches[i].lat);
       longitudes.push(matches[i].lng);
     }
-    console.log(latitudes)
+    //console.log(latitudes)
     //res.json({ matches });
 
     filtered_users = await User.find({
       'location.latitude': { $in: latitudes },
       'location.longitude': { $in: longitudes }
-    }, {email: 1, username: 1, erp: 1, location: 1, _id: 1});
-    console.log(filtered_users)
+    }, {email: 1, username: 1, erp: 1, location: 1, _id: 1,'schedule.role':1});
+    //console.log(filtered_users[0])
     res.json({ filtered_users });
   })
   .catch((error) => {
@@ -805,6 +805,12 @@ daySch[0].accept_going.push({
   email: s_user.email,
   erp: s_user.erp
 });
+S_daySch[0].accept_going.push({
+  id: userid,
+  username: user.username,
+  email: user.email,
+  erp: user.erp
+});
 await user.save();
 await s_user.save();
 res.send(daySch[0].accept_going)
@@ -837,6 +843,8 @@ router.post('/acceptcoming/:userid/:day', async (req, res) => {
     }
     
     S_daySch[0].accept_coming = userid;
+    daySch[0].accept_coming = s_userid;
+
     console.log(available_id)
     let index = daySch[0].request_coming.indexOf(available_id);
     console.log(index)
